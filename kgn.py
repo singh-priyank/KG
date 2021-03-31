@@ -22,6 +22,43 @@ import networkx as nx
 from nltk.corpus import wordnet
 
 
+class Vertex:
+	id = T.id
+	single = Cardinality.single
+	g = None
+	def __init__(self,graph):
+		self.g = graph
+	
+	def list_all(self):
+		return self.g.with_('evaluationTimeout', 500).V().toList()
+		#self.g.V().limit(limit).elementMap().toList()
+
+	def properties(self,vid):
+		data = dict()
+		for p in self.g.V(vid).properties():
+			data[p.label] =  p.value
+		return data
+
+	def add_vertex(self,label,prop):
+		g.addV('vertex').property('labelV',label).next()
+		for k in prop:
+			g.V().has('labelV', label).property(k, prop[k]).iterate()
+
+	def delete_vertex(self,vid):
+		g.V(vid).drop()
+
+
+class Edge:
+
+	g = None
+
+	def __init__(self,graph):
+		self.g = graph
+
+	def add_edge(self,label1,label2,prop):
+		#g.V().has('vertex','labelV',label1).as('a').V().has('vertex','labelV',label2).addE(prop).to('a')
+		pass
+
 class Import:
 
 	def __init__(self):
@@ -42,7 +79,7 @@ class Import:
 		G2.add_edges_from(edges)
 		nx.draw(G2,with_labels=True)
 		#plt.show()
-		print(G2.nodes(data=True))
+		#print(G2.nodes(data=True))
 		#self.graph = G2
 		return G2
 
@@ -54,6 +91,7 @@ class Import:
 		plt.show()
 
 		return ego_graph
+
 
 class Algo:
 	def __init__(self):
@@ -86,6 +124,8 @@ class Algo:
 		#self.graph = G
 		return G
 
+
+
 if __name__=="__main__":
 	gra = Import()
 	G1 = gra.import_graphml('my-graph.graphml')
@@ -96,13 +136,41 @@ if __name__=="__main__":
 	# G = algo.join_graphs(G1,G2)
 	#nx.write_graphml(G, "g.graphml")
 
-
 	g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin','g'))
-	print(g.with_('evaluationTimeout', 500).V().toList())
+	#g.addV('book').property('name', 'The French Chef Cookbook').property('year' , 1968).property('ISBN', '0-394-40135-2')
+	vet = Vertex(g)
+	ed = Edge(g)
+	#print(vet.list_all())
 
+	''' Add vertex '''
+	data = {'ISBN': '0-394-40135-2', 'year': 1968, 'name': 'The French Chef Cookbook'}
+	vet.add_vertex('book',data)	
 
-	#
+	#print(vet.list_all())
+	#ed.add_edge('book','file')
+
+	
+	print(vet.properties('160'))
+	
+
 	subGraph = g.V('0').repeat(__.bothE().subgraph('subGraph').V()).times(1).cap('subGraph').next()
 	#sg = traversal().withEmbedded(subGraph)
 	#g.V('0').valueMap(True).toList()
-	print(subGraph)
+	#print(subGraph)
+
+	#print(g.with_('evaluationTimeout', 500).V().toList())
+
+	#print(vet.list_all())
+
+
+
+
+
+	# def find_vertex(self, vid):
+	# 	return self.g.V(vid).elementMap().next()
+
+	# def list_by_label_name(self, vlabel, name):
+	# 	return self.g.V().has(vlabel, 'name', name).elementMap().toList()
+
+	# def update_vertex(self, vid, name):
+	# 	self.g.V(vid).property(Cardinality.single, 'name', name).next()
