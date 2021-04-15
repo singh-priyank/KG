@@ -18,102 +18,105 @@
 <key id="d2" for="node" attr.name="name" attr.type="string"/>
 <key id="d1" for="node" attr.name="grade_id" attr.type="string"/>
 <key id="d0" for="node" attr.name="labelV" attr.type="string"/>
-<graph edgedefault="undirected"><node id="grade">
-  <data key="d0">node</data>
+<graph edgedefault="undirected"><node id="1">
+  <data key="d0">grade</data>
   <data key="d1">INT</data>
   <data key="d2">VARCHAR</data>
 </node>
-<node id="course">
-  <data key="d0">node</data>
+<node id="2">
+  <data key="d0">course</data>
   <data key="d3">INT</data>
   <data key="d2">VARCHAR</data>
   <data key="d1">INT</data>
 </node>
-<node id="classroom">
-  <data key="d0">node</data>
+<node id="3">
+  <data key="d0">classroom</data>
   <data key="d4">INT</data>
   <data key="d1">INT</data>
   <data key="d5">VARCHAR</data>
   <data key="d6">INT</data>
 </node>
-<node id="classroom_student">
-  <data key="d0">node</data>
+<node id="4">
+  <data key="d0">classroom_student</data>
   <data key="d4">INT</data>
   <data key="d7">INT</data>
 </node>
-<node id="attendance">
-  <data key="d0">node</data>
+<node id="5">
+  <data key="d0">attendance</data>
   <data key="d8">Date</data>
   <data key="d9">INT</data>
   <data key="d10">INT</data>
 </node>
-<node id="exam_type">
+<node id="6">
   <data key="d11">INT</data>
   <data key="d2">VARCHAR</data>
+  <data key="d0">exam_type</data>
 </node>
-<node id="exam">
+<node id="7">
   <data key="d12">INT</data>
   <data key="d11">INT</data>
   <data key="d2">VARCHAR</data>
+  <data key="d0">exam</data>
 </node>
-<node id="exam_result">
-  <data key="d0">node</data>
+<node id="8">
+  <data key="d0">exam_result</data>
   <data key="d12">INT</data>
   <data key="d9">INT</data>
   <data key="d3">INT</data>
 </node>
-<node id="student">
-  <data key="d0">node</data>
+<node id="9">
+  <data key="d0">student</data>
   <data key="d9">INT</data>
   <data key="d13">VARCHAR</data>
   <data key="d2">VARCHAR</data>
   <data key="d14">Date</data>
   <data key="d15">INT</data>
 </node>
-<node id="parent">
-  <data key="d0">node</data>
+<node id="10">
+  <data key="d0">parent</data>
   <data key="d15">INT</data>
   <data key="d13">VARCHAR</data>
   <data key="d16">VARCHAR</data>
   <data key="d17">VARCHAR</data>
 </node>
-<node id="teacher">
+<node id="11">
   <data key="d6">INT</data>
   <data key="d2">VARCHAR</data>
   <data key="d13">VARCHAR</data>
   <data key="d14">Date</data>
+  <data key="d0">teacher</data>
 </node>
-<edge source="grade" target="course">
+<edge source="1" target="2">
   <data key="d18">has</data>
 </edge>
-<edge source="grade" target="classroom">
+<edge source="1" target="3">
   <data key="d18">has</data>
 </edge>
-<edge source="course" target="exam_result">
+<edge source="2" target="8">
   <data key="d18">has</data>
 </edge>
-<edge source="classroom" target="classroom_student">
+<edge source="3" target="4">
   <data key="d18">has</data>
 </edge>
-<edge source="classroom" target="teacher">
+<edge source="3" target="11">
   <data key="d18">has</data>
 </edge>
-<edge source="classroom_student" target="student">
+<edge source="4" target="9">
   <data key="d18">has</data>
 </edge>
-<edge source="attendance" target="student">
+<edge source="5" target="9">
   <data key="d18">has</data>
 </edge>
-<edge source="exam_type" target="exam">
+<edge source="6" target="7">
   <data key="d18">has</data>
 </edge>
-<edge source="exam" target="exam_result">
+<edge source="7" target="8">
   <data key="d18">has</data>
 </edge>
-<edge source="exam_result" target="student">
+<edge source="8" target="9">
   <data key="d18">has</data>
 </edge>
-<edge source="student" target="parent">
+<edge source="9" target="10">
   <data key="d18">has</data>
 </edge>
 </graph></graphml>

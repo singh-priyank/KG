@@ -60,35 +60,35 @@
 <key id="d2" for="node" attr.name="Name" attr.type="string"/>
 <key id="d1" for="node" attr.name="Area_id" attr.type="string"/>
 <key id="d0" for="node" attr.name="labelV" attr.type="string"/>
-<graph edgedefault="undirected"><node id="Area">
-  <data key="d0">node</data>
+<graph edgedefault="undirected"><node id="12">
+  <data key="d0">Area</data>
   <data key="d1">INT</data>
   <data key="d2">VARCHAR</data>
   <data key="d3">INT</data>
 </node>
-<node id="Subject">
-  <data key="d0">node</data>
+<node id="13">
+  <data key="d0">Subject</data>
   <data key="d4">INT</data>
   <data key="d5">VARCHAR</data>
   <data key="d1">INT</data>
   <data key="d6">INT</data>
   <data key="d7">INT</data>
 </node>
-<node id="SubjectGrade">
-  <data key="d0">node</data>
+<node id="14">
+  <data key="d0">SubjectGrade</data>
   <data key="d8">INT</data>
   <data key="d9">INT</data>
   <data key="d4">INT</data>
 </node>
-<node id="Level">
-  <data key="d0">node</data>
+<node id="15">
+  <data key="d0">Level</data>
   <data key="d10">INT</data>
   <data key="d2">VARCHAR</data>
   <data key="d11">VARCHAR</data>
   <data key="d12">INT</data>
 </node>
-<node id="Grade">
-  <data key="d0">node</data>
+<node id="16">
+  <data key="d0">Grade</data>
   <data key="d12">INT</data>
   <data key="d2">VARCHAR</data>
   <data key="d10">INT</data>
@@ -96,8 +96,8 @@
   <data key="d14">INT</data>
   <data key="d15">INT</data>
 </node>
-<node id="ScoreRecord">
-  <data key="d0">node</data>
+<node id="17">
+  <data key="d0">ScoreRecord</data>
   <data key="d16">INT</data>
   <data key="d4">INT</data>
   <data key="d17">INT</data>
@@ -107,15 +107,15 @@
   <data key="d21">INT</data>
   <data key="d22">DATE</data>
 </node>
-<node id="Attendance">
-  <data key="d0">node</data>
+<node id="18">
+  <data key="d0">Attendance</data>
   <data key="d23">INT</data>
   <data key="d17">INT</data>
   <data key="d24">VARCHAR</data>
   <data key="d25">DATE</data>
 </node>
-<node id="Student">
-  <data key="d0">node</data>
+<node id="19">
+  <data key="d0">Student</data>
   <data key="d17">INT</data>
   <data key="d26">INT</data>
   <data key="d27">VARCHAR</data>
@@ -129,16 +129,16 @@
   <data key="d32">VARCHAR</data>
   <data key="d33">VARCHAR</data>
 </node>
-<node id="GradeParalelo">
-  <data key="d0">node</data>
+<node id="20">
+  <data key="d0">GradeParalelo</data>
   <data key="d26">INT</data>
   <data key="d9">INT</data>
   <data key="d34">INT</data>
   <data key="d2">VARCHAR</data>
   <data key="d17">INT</data>
 </node>
-<node id="Staff">
-  <data key="d0">node</data>
+<node id="21">
+  <data key="d0">Staff</data>
   <data key="d34">INT</data>
   <data key="d2">VARCHAR</data>
   <data key="d35">DATE</data>
@@ -152,168 +152,201 @@
   <data key="d38">INT</data>
   <data key="d39">INT</data>
 </node>
-<node id="User">
-  <data key="d0">node</data>
+<node id="22">
+  <data key="d0">User</data>
   <data key="d40">VARCHAR</data>
   <data key="d41">VARCHAR</data>
 </node>
-<node id="StaffType">
-  <data key="d0">node</data>
+<node id="23">
+  <data key="d0">StaffType</data>
   <data key="d2">VARCHAR</data>
   <data key="d34">INT</data>
 </node>
-<node id="grade">
-  <data key="d0">node</data>
+<node id="1">
+  <data key="d0">grade</data>
   <data key="d42">INT</data>
   <data key="d43">VARCHAR</data>
 </node>
-<node id="course">
-  <data key="d0">node</data>
+<node id="2">
+  <data key="d0">course</data>
   <data key="d44">INT</data>
   <data key="d43">VARCHAR</data>
   <data key="d42">INT</data>
 </node>
-<node id="classroom">
-  <data key="d0">node</data>
+<node id="3">
+  <data key="d0">classroom</data>
   <data key="d45">INT</data>
   <data key="d42">INT</data>
   <data key="d46">VARCHAR</data>
   <data key="d47">INT</data>
 </node>
-<node id="classroom_student">
-  <data key="d0">node</data>
+<node id="4">
+  <data key="d0">classroom_student</data>
   <data key="d45">INT</data>
   <data key="d48">INT</data>
 </node>
-<node id="attendance">
-  <data key="d0">node</data>
+<node id="5">
+  <data key="d0">attendance</data>
   <data key="d49">Date</data>
   <data key="d50">INT</data>
   <data key="d51">INT</data>
 </node>
-<node id="exam_type">
+<node id="6">
   <data key="d52">INT</data>
   <data key="d43">VARCHAR</data>
+  <data key="d0">exam_type</data>
 </node>
-<node id="exam">
+<node id="7">
   <data key="d53">INT</data>
   <data key="d52">INT</data>
   <data key="d43">VARCHAR</data>
+  <data key="d0">exam</data>
 </node>
-<node id="exam_result">
-  <data key="d0">node</data>
+<node id="8">
+  <data key="d0">exam_result</data>
   <data key="d53">INT</data>
   <data key="d50">INT</data>
   <data key="d44">INT</data>
 </node>
-<node id="student">
-  <data key="d0">node</data>
+<node id="9">
+  <data key="d0">student</data>
   <data key="d50">INT</data>
   <data key="d54">VARCHAR</data>
   <data key="d43">VARCHAR</data>
   <data key="d55">Date</data>
   <data key="d56">INT</data>
 </node>
-<node id="parent">
-  <data key="d0">node</data>
+<node id="10">
+  <data key="d0">parent</data>
   <data key="d56">INT</data>
   <data key="d54">VARCHAR</data>
   <data key="d57">VARCHAR</data>
   <data key="d58">VARCHAR</data>
 </node>
-<node id="teacher">
+<node id="11">
   <data key="d47">INT</data>
   <data key="d43">VARCHAR</data>
   <data key="d54">VARCHAR</data>
   <data key="d55">Date</data>
+  <data key="d0">teacher</data>
 </node>
-<node id="class">
-  <data key="d59">bridge</data>
+<node id="24">
+  <data key="d59">class</data>
 </node>
-<node id="act">
-  <data key="d59">bridge</data>
+<node id="25">
+  <data key="d59">act</data>
 </node>
-<node id="person">
-  <data key="d59">bridge</data>
+<node id="26">
+  <data key="d59">attendance</data>
 </node>
-<node id="social_group">
-  <data key="d59">bridge</data>
+<node id="27">
+  <data key="d59">act</data>
 </node>
-<edge source="Area" target="Subject">
+<node id="28">
+  <data key="d59">student</data>
+</node>
+<node id="29">
+  <data key="d59">person</data>
+</node>
+<node id="30">
+  <data key="d59">person</data>
+</node>
+<node id="31">
+  <data key="d59">social_group</data>
+</node>
+<node id="32">
+  <data key="d59">person</data>
+</node>
+<node id="33">
+  <data key="d59">person</data>
+</node>
+<node id="34">
+  <data key="d59">person</data>
+</node>
+<edge source="12" target="13">
   <data key="d60">Area_info</data>
 </edge>
-<edge source="Subject" target="SubjectGrade">
+<edge source="13" target="14">
   <data key="d60">of_Subject</data>
 </edge>
-<edge source="Subject" target="ScoreRecord">
+<edge source="13" target="17">
   <data key="d60">subject_info</data>
 </edge>
-<edge source="SubjectGrade" target="Grade">
+<edge source="14" target="16">
   <data key="d60">level_info</data>
 </edge>
-<edge source="Level" target="Grade">
+<edge source="15" target="16">
   <data key="d60">has</data>
 </edge>
-<edge source="Grade" target="GradeParalelo">
+<edge source="16" target="20">
   <data key="d60">has</data>
 </edge>
-<edge source="Grade" target="class"/>
-<edge source="ScoreRecord" target="Student">
+<edge source="16" target="24"/>
+<edge source="17" target="19">
   <data key="d60">has</data>
 </edge>
-<edge source="Attendance" target="Student">
+<edge source="18" target="19">
   <data key="d60">has</data>
 </edge>
-<edge source="Attendance" target="act"/>
-<edge source="Student" target="GradeParalelo">
+<edge source="18" target="25"/>
+<edge source="18" target="26"/>
+<edge source="18" target="27"/>
+<edge source="19" target="20">
   <data key="d60">has</data>
 </edge>
-<edge source="Student" target="person"/>
-<edge source="GradeParalelo" target="Staff">
+<edge source="19" target="28"/>
+<edge source="19" target="29"/>
+<edge source="19" target="30"/>
+<edge source="20" target="21">
   <data key="d60">has</data>
 </edge>
-<edge source="Staff" target="StaffType"/>
-<edge source="Staff" target="social_group"/>
-<edge source="grade" target="course">
+<edge source="21" target="23"/>
+<edge source="21" target="31"/>
+<edge source="22" target="32"/>
+<edge source="22" target="33"/>
+<edge source="22" target="34"/>
+<edge source="1" target="2">
   <data key="d60">has</data>
 </edge>
-<edge source="grade" target="classroom">
+<edge source="1" target="3">
   <data key="d60">has</data>
 </edge>
-<edge source="grade" target="class"/>
-<edge source="grade" target="social_group"/>
-<edge source="course" target="exam_result">
+<edge source="1" target="24"/>
+<edge source="1" target="31"/>
+<edge source="2" target="8">
   <data key="d60">has</data>
 </edge>
-<edge source="course" target="act"/>
-<edge source="classroom" target="classroom_student">
+<edge source="2" target="25"/>
+<edge source="3" target="4">
   <data key="d60">has</data>
 </edge>
-<edge source="classroom" target="teacher">
+<edge source="3" target="11">
   <data key="d60">has</data>
 </edge>
-<edge source="classroom_student" target="student">
+<edge source="4" target="9">
   <data key="d60">has</data>
 </edge>
-<edge source="attendance" target="student">
+<edge source="5" target="9">
   <data key="d60">has</data>
 </edge>
-<edge source="attendance" target="attendance"/>
-<edge source="exam_type" target="exam">
+<edge source="5" target="26"/>
+<edge source="6" target="7">
   <data key="d60">has</data>
 </edge>
-<edge source="exam" target="exam_result">
+<edge source="7" target="8">
   <data key="d60">has</data>
 </edge>
-<edge source="exam" target="act"/>
-<edge source="exam_result" target="student">
+<edge source="7" target="27"/>
+<edge source="8" target="9">
   <data key="d60">has</data>
 </edge>
-<edge source="student" target="parent">
+<edge source="9" target="10">
   <data key="d60">has</data>
 </edge>
-<edge source="student" target="student"/>
-<edge source="student" target="person"/>
-<edge source="parent" target="person"/>
-<edge source="teacher" target="person"/>
+<edge source="9" target="28"/>
+<edge source="9" target="32"/>
+<edge source="10" target="29"/>
+<edge source="10" target="33"/>
+<edge source="11" target="30"/>
+<edge source="11" target="34"/>
 </graph></graphml>
