@@ -4,10 +4,14 @@ from gremlin_python.process.graph_traversal import __
 from gremlin_python.process.strategies import *
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.structure.graph import Graph
+from nltk.corpus import wordnet
+from bs4 import BeautifulSoup as soup
+from urllib.request import urlopen as uReq
+from urllib.error import HTTPError
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
-from nltk.corpus import wordnet
+import collections
 
 
 class Vertex:
@@ -101,20 +105,35 @@ class Algo:
 			If similarity is more than 50% add bridge node to connect both the nodes
 		'''
 		for s in g1:
-			cb = wordnet.synsets(s[1]['labelV'])
+			if 'labelV' in s[1]:
+				cb = wordnet.synsets(s[1]['labelV'])
+			else:
+				continue
 			if len(cb)==0:
 				continue
 			cb = cb[0]
 
 			for e in g2:
-				ib = wordnet.synsets(e[1]['labelV'])
+				if 'labelV' in e[1]:
+					ib = wordnet.synsets(e[1]['labelV'])
+				else:
+					continue
 				if len(ib)==0:
 					continue
 				ib = ib[0]
-
-                # Condition if similarity is more than 50% 
+				if s[1]['labelV'].lower() == e[1]['labelV'].lower():
+					for i in e[1]:
+						if i not in s[1]:
+							s[1][i] = e[1][i]
+					edg = list(G.edges(e[0]))
+					for i in range(len(edg)):
+						#print([s[0],edg[i][1],{'labelE': 'has'}])
+						G.add_edges_from([(s[0],edg[i][1],{'labelE': 'has'})])
+					G.remove_node(e[0])
+					continue
+				# Condition if similarity is more than 50% 
 				if ib.wup_similarity(cb)>=0.5:
-                    
+
 					# Lowest hypernym will be bridge node
 					bridgess = cb.lowest_common_hypernyms(ib)
 					lemma = bridgess[0].lemmas()
@@ -124,35 +143,242 @@ class Algo:
 					if G.has_node(lemma[0].name()):
 						G.add_edge(e[0],lemma[0].name())
 					else:
-						G.add_nodes_from([(l,{"labelB":lemma[0].name()}),])
-						G.add_edge(s[0],l)
-						G.add_edge(e[0],l)
+						G.add_nodes_from([(str(l),{"labelB":lemma[0].name()}),])
+						G.add_edges_from([(s[0],str(l),{'labelE': 'has'})])
+						G.add_edges_from([(e[0],str(l),{'labelE': 'has'})])
 						l+=1
 
-					# print(s[1]['labelV'],e[1]['labelV'],tt,s[0],e[0])
-					# print(ib.wup_similarity(cb))
+					print(s[1]['labelV'],e[1]['labelV'],end="...............")
+					print(ib.wup_similarity(cb), lemma[0].name())
 
 		return G
 
+class Synonym:
+	def find_synonyms(self,string):
+		synonym_words = []
+		synonym_words.append(string)
+		try:
+			# Remove whitespace before and after word and use underscore between words
+			stripped_string = string.strip()
+			fixed_string = stripped_string.replace(" ", "_")
+			#print(f"{fixed_string}:")
+
+			# Set the url using the amended string
+			my_url = f'https://thesaurus.plus/thesaurus/{fixed_string}'
+			# Open and read the HTMLz
+			uClient = uReq(my_url)
+			page_html = uClient.read()
+			uClient.close()
+
+			# Parse the html into text
+			page_soup = soup(page_html, "html.parser")
+			word_boxes = page_soup.find("ul", {"class": "list paper"})
+			results = word_boxes.find_all("div", "list_item")
+
+			# Iterate over results and print
+			for result in results:
+				synonym_words.append(result.text.strip())
+
+		except HTTPError:
+			pass
+
+		return synonym_words
+
+	def add_synonyms(self,nodes):
+		for node in nodes:
+			synonyms = self.find_synonyms(node[1]['labelV'])
+			for syn in synonyms:
+				node[1]['$'+syn] = 'Synonym'
+
+		return nodes
+
+
+class Query:
+	def findNode(self,g,name):
+		nodes = set(g.V().has('$'+name).toList())
+		if len(nodes)==0:
+			return "No such node"
+		
+		final_node = '0'
+		for node in nodes:
+			node_name = g.V(node).valueMap(True).toList()[0]['labelV'][0]
+			if name == node_name:
+				final_node = node
+		if final_node == '0':
+			final_node = list(nodes)[0]
+		
+		return final_node
+
+	def extractVertex(self,g,graph):
+		tem_vertex = graph['@value']['vertices']
+		l = []
+		for v in tem_vertex:
+			for p in g.V(v).properties():
+				if p.label=='labelV':
+					l.append(p.value)
+					break
+		return tuple(l)
+
+	def extractEdges(self,g,graph):
+		tem_edge = graph['@value']['edges']
+		edges = []
+		for edg in tem_edge:
+			tem = str(edg).split('[')[2].replace('-edge-','').replace(']','')
+			tem = tem.split('>')
+			try:	
+				start = g.V(tem[0]).valueMap(True).toList()[0]['labelV'][0]
+			except:
+				start = g.V(tem[0]).valueMap(True).toList()[0]['labelB'][0]
+			try:
+				end = g.V(tem[1]).valueMap(True).toList()[0]['labelV'][0]
+			except:
+				end = g.V(tem[1]).valueMap(True).toList()[0]['labelB'][0]
+			edges.append((start,end))
+		return tuple(edges)
+
+
+	def findTrees(self,g,name,depth):
+		node = self.findNode(g,name)
+		if node == "No such node":
+			return
+		subGraph = g.V(node).repeat(__.bothE().subgraph('subGraph').V()).times(depth).cap('subGraph').next()
+		vertex = self.extractVertex(g,subGraph)
+		edges = self.extractEdges(g,subGraph)
+		return (vertex,edges)
+		
+
+	def findDescendants(self,g,name,depth):
+		node = self.findNode(g,name)
+		if node == "No such node":
+			return
+
+		subGraph = g.V(node).repeat(__.bothE().subgraph('subGraph').V()).times(depth).cap('subGraph').next()
+
+		tem_vertex = subGraph['@value']['vertices']
+
+		nodes = []
+
+		for ver in tem_vertex:
+			for p in g.V(ver).properties():
+				if p.label=='labelV':
+					nodes.append((p.value,ver))
+					break
+		return tuple(nodes)
+
+	def bfs(graph,root,g):
+		visited, queue = set(), collections.deque([(root,root)])
+		removed = set()
+		visited.add(root)
+
+		while queue:
+
+			# Dequeue a vertex from queue
+			vertex = queue.popleft()
+			if vertex[0] in removed or vertex[1] in removed:
+				continue
+			flag = 0
+			for p in g.V(vertex[0]).properties():
+				if p.label=='labelV':
+					flag=1
+					break
+			if flag:
+				print(maping[vertex[0]],end=' ')
+				visited.add(vertex[0])
+				for neighbour in graph[vertex[0]]:
+					if neighbour not in visited:
+						queue.append((neighbour,vertex[0]))
+			else:
+				print("...",maping[vertex[0]],maping[vertex[1]])
+				visited.add(vertex[0])
+				removed.add(vertex[0])
+				for neighbour in graph[vertex[0]]:
+					if neighbour not in visited:
+						print(maping[neighbour],neighbour)
+						response = input()
+						if response == 'y' or response=='Y':
+							graph[vertex[1]].append(neighbour)
+							graph[neighbour].remove(vertex[0])
+							graph[neighbour].append(vertex[1])
+
+							queue.append((neighbour,vertex[1]))
+						else:
+							graph[neighbour].remove(vertex[0])
+						graph.pop(vertex[0])
+		return graph
 
 
 if __name__=="__main__":
+
+	''' 
+		Import graphml file
+	'''
 	# gra = Import()
 	# G3 = gra.import_graphml('g3.graphml')
 	# G2 = gra.import_graphml('g2.graphml')
 	
 	# algo = Algo()
-	# G = algo.join_graphs(G3,G2)
+	# G = algo.join_graphs(G2,G3)
 	# nx.write_graphml(G, "gf.graphml")
 
 	#G = gra.import_graphml('gf.graphml')
-	g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin','g'))
-	#g.addV('book').property('name', 'The French Chef Cookbook').property('year' , 1968).property('ISBN', '0-394-40135-2')
-	#vet = Vertex(G)
-	# ed = Edge(g)
-	#print(vet.list_all())
 
+
+	''' Graph traversal '''
+	g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin','g'))
 	
+	
+
+	''' Get all the nodes '''
+	#l = g.with_('evaluationTimeout', 500).V().toList()
+	
+	
+	# name = input("Enter the word: ")
+	name = 'grade'
+	q = Query()
+	subGraph = q.findTrees(g, name, 1)
+	print(subGraph)
+	print("Descendants")
+	print(q.findDescendants(g, name, 1))
+	
+
+	# graph = {}
+	# edge = []
+	# tem_edge = subGraph['@value']['edges']
+	
+	# for edg in tem_edge:
+	# 	tem = str(edg).split('[')[2].replace('-edge-','').replace(']','')
+	# 	tem = tem.split('>')
+	# 	if tem[0] not in maping or tem[1] not in maping:
+	# 		continue
+	# 	if tem[0] not in graph:
+	# 		graph[tem[0]] = []
+	# 	graph[tem[0]].append(tem[1])
+
+	# 	if tem[1] not in graph:
+	# 		graph[tem[1]] = []
+	# 	graph[tem[1]].append(tem[0])
+
+	# 	edge.append(tuple(tem))
+	# # print(graph)
+
+	# print("output")
+	# graph = bfs(graph,maping[name],g)
+	# for node in graph:
+	# 	print(maping[node],end=" -> ")
+	# 	for i in set(graph[node]):
+	# 		print(maping[i],end = " ")
+	# 	print()
+	# data = dict()
+	# for p in g.E(e).properties():
+	# 	print(p.value)
+	# for p in g.V(v).properties():
+	# 	data[p.label] = p.value
+	# print(data)
+
+
+
+
+
 	''' Add vertex '''
 	# nodes = [(1, {'labelV': 'grade', 'grade_id': 'INT', 'name': 'VARCHAR'}), (2, {'labelV': 'course', 'course_id': 'INT', 'name': 'VARCHAR', 'grade_id': 'INT'}),
 	# 		 (3, {'labelV': 'classroom', 'classroom_id': 'INT', 'grade_id': 'INT', 'section': 'VARCHAR', 'teacher_id': 'INT'}),
@@ -163,10 +389,12 @@ if __name__=="__main__":
 	# 		 (10, {'labelV': 'parent', 'parent_id': 'INT', 'email': 'VARCHAR', 'password': 'VARCHAR', 'mobile': 'VARCHAR'}), 
 	# 		 (11, {'teacher_id': 'INT', 'name': 'VARCHAR', 'email': 'VARCHAR', 'dob': 'Date', 'labelV': 'teacher'}) ]
 	
+	# print(nodes)
 	# edges = [(1, 2, {'labelE': 'has'}), (1, 3, {'labelE': 'has'}), (3, 4, {'labelE': 'has'}), (3, 11, {'labelE': 'has'}),
 	# 		 (6, 7, {'labelE': 'has'}), (7, 8, {'labelE': 'has'}), (5, 9, {'labelE': 'has'}), (4, 9, {'labelE': 'has'}), 
 	# 		 (2, 8, {'labelE': 'has'}), (9, 8, {'labelE': 'has'}), (9, 10, {'labelE': 'has'})]
 
+	
 	# nodes = [(12, {'labelV': 'Area', 'Area_id': 'INT', 'Name': 'VARCHAR', 'Subjects_id': 'INT'}), (13, {'labelV': 'Subject', 'Subject_id': 'INT', 'Abbreviation': 'VARCHAR', 'Area_id': 'INT', 'ScoreRecords_id': 'INT', 'SubjectGrades_id': 'INT'}), 
 	# 		(14, {'labelV': 'SubjectGrade', 'SubjectGrade_id': 'INT', 'Grade_id': 'INT', 'Subject_id': 'INT'}), (15, {'labelV': 'Level', 'Level_id': 'INT', 'Name': 'VARCHAR', 'Principle': 'VARCHAR', 'Garde_id': 'INT'}), 
 	# 		(16, {'labelV': 'Grade', 'Garde_id': 'INT', 'Name': 'VARCHAR', 'Level_id': 'INT', 'Observation': 'VARCHAR', 'Grade_paraleloes_id': 'INT', 'Subject_grades_id': 'INT'}), 
@@ -183,20 +411,20 @@ if __name__=="__main__":
 	# 		(20, 21, {'labelE': 'has'}), (21, 23)]
 
 
-
-	#g3 = gra.create_graph(nodes,edges)
-	# vet = Vertex(G2)
-	# print(vet.list_all())
-	#nx.write_graphml(g3, "g3.graphml")
-
-
-
-
-
+	'''
+		Create grahml file from node and edge list
+	'''
+	# syn = Synonym()
+	# nodes = syn.add_synonyms(nodes)
+	
+	# G = gra.create_graph(nodes,edges)
+	# nx.write_graphml(G, "g2.graphml")
 
 
-
-# vet.add_vertex('course',data)	
+	'''
+		Add single data
+	'''
+	# vet.add_vertex('course',data)	
 	#vet.delete_vertex('grade')
 	# data = {'grade_id':'INT', 'name':'VARCHAR'}
 	#vet.add_vertex('grade',data)
