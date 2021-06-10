@@ -1,5 +1,8 @@
 # KG
 
+## Downloading
+- Download the gremlin server and console from https://tinkerpop.apache.org/downloads.html
+
 ## Change files in apache server folder 
 - add graphml file to ``` path_to_server_folder/data ```
 - add path of final graphml file here   ``` path_to_server_folder/scripts/school-sample.groovy ```
