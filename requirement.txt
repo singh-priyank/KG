@@ -1,0 +1,7 @@
+py_thesaurus Version==1.0.4
+networkx==2.5.1
+numpy==1.20.0
+matplotlib==3.4.2
+BeautifulSoup==4.9.0
+request==2.25.1
+xlrd==2.0.1
