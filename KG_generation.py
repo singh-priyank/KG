@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import collections
 import pandas as pd
-
+import os
 
 
 
@@ -93,14 +93,14 @@ class Algo:
     def __init__(self):
         self.graph = None
 
-    def join_graphs(self, graph1, graph2):
+    def join_graphs(self, graph1, graph2,bridge_nodes):
 
         '''  
             Converting two graph object to single object
             So that Adding vertex and edges can be done easily
         ''' 
-        G = nx.compose(graph1,graph2)
-        l = len(G.nodes)+1
+        G = nx.compose(graph1, graph2)
+        l = len(G.nodes) + 1
         # List of all nodes in a graph
         g1 = [node for node in graph1.nodes(data=True)]
         g2 = [node for node in graph2.nodes(data=True)]
@@ -114,7 +114,7 @@ class Algo:
                 cb = wordnet.synsets(s[1]['labelV'])
             else:
                 continue
-            if len(cb)==0:
+            if len(cb) == 0:
                 continue
             cb = cb[0]
 
@@ -123,7 +123,7 @@ class Algo:
                     ib = wordnet.synsets(e[1]['labelV'])
                 else:
                     continue
-                if len(ib)==0:
+                if len(ib) == 0:
                     continue
                 ib = ib[0]
                 if s[1]['labelV'].lower() == e[1]['labelV'].lower():
@@ -133,30 +133,32 @@ class Algo:
                     edg = list(G.edges(e[0]))
                     for i in range(len(edg)):
                         #print([s[0],edg[i][1],{'labelE': 'has'}])
-                        G.add_edges_from([(s[0],edg[i][1],{'labelE': 'has'})])
+                        G.add_edges_from([(s[0], edg[i][1], {'labelE': 'has'})])
                     G.remove_node(e[0])
                     continue
+
                 # Condition if similarity is more than 50% 
-                if ib.wup_similarity(cb)>=0.5:
+                try:
+                    if ib.wup_similarity(cb) >= 0.5:
 
-                    # Lowest hypernym will be bridge node
-                    bridgess = cb.lowest_common_hypernyms(ib)
-                    lemma = bridgess[0].lemmas()
+                        # Lowest hypernym will be bridge node
+                        bridgess = cb.lowest_common_hypernyms(ib)
+                        lemma = bridgess[0].lemmas()
 
-                    # If that node is already there add only new edge, else add vertex and edges
+                        # If that node is already there add only new edge, else add vertex and edges
 
-                    if G.has_node(lemma[0].name()):
-                        G.add_edge(e[0],lemma[0].name())
-                    else:
-                        G.add_nodes_from([(str(l),{"labelB":lemma[0].name().lower()}),])
-                        G.add_edges_from([(s[0],str(l),{'labelE': 'has'})])
-                        G.add_edges_from([(e[0],str(l),{'labelE': 'has'})])
-                        l+=1
+                        if lemma[0].name() in bridge_nodes:
+                            G.add_edge(e[0], bridge_nodes[lemma[0].name()])
+                        else:
+                            G.add_nodes_from([(str(l), {"labelB":lemma[0].name().lower()}),])
+                            G.add_edges_from([(s[0], str(l),{'labelE': 'has'})])
+                            G.add_edges_from([(e[0], str(l),{'labelE': 'has'})])
+                            bridge_nodes[lemma[0].name()] = l
+                            l+=1
+                except:
+                    pass
 
-                    # print(s[1]['labelV'],e[1]['labelV'],end="...............")
-                    # print(ib.wup_similarity(cb), lemma[0].name())
-
-        return G
+        return G,bridge_nodes
 
 class Synonym:
     def find_synonyms(self,string):
@@ -201,9 +203,11 @@ class Excel:
     def convert_nodes(self,path,n):
         edges,nodes = [],[]
         xls = pd.ExcelFile(path)
-        df = xls.parse(0)
+        df = pd.read_excel(xls,'Relationships')
         mapping = {}
         for index, row in df.iterrows():
+            if type(row['SourceTable']) is not str or type(row['TargetTable']) is not str:
+                continue
             if row['SourceTable'] not in mapping:
                 mapping[row['SourceTable']] = [n,row['SourceTableKey']]
                 n+=1
@@ -217,12 +221,15 @@ class Excel:
             key = mapping[name][1]
             node_attr = {}
             attr_name, attr_type = [],[]
-            for tables in range(1,len(mapping)+1):
+            for tables in range(len(mapping)+1):
                 next_df = xls.parse(tables)
-                if key in list(next_df['Column Name']):
-                    attr_name = list(next_df['Column Name'])
-                    attr_type = list(next_df['Column Type'])
-                    break
+                try:
+                    if key in list(next_df['Column Name']):
+                        attr_name = list(next_df['Column Name'])
+                        attr_type = list(next_df['Column Type'])
+                        break
+                except:
+                    pass
                     
             for i in range(len(attr_name)):
                 node_attr[attr_name[i]] = attr_type[i]
@@ -240,21 +247,29 @@ if __name__=="__main__":
     gra = Import()
     ex = Excel()
     algo = Algo()
-    syn = Synonym() 
+    syn = Synonym()
 
+    dirListing = os.listdir('Models')
+    file_list = []
+    bridge_nodes = {}
+    for item in dirListing:
+        if ".xlsx" in item:
+            file_list.append('Models/'+item)
+        
     nodes,edges = ex.convert_nodes('test.xlsx',1)
     nodes = syn.add_synonyms(nodes)
     Gf = gra.create_graph(nodes,edges)
     # nx.write_graphml(Gf, "tf.graphml")
 
-    file_list = ['test1.xls']
+    
     for file in file_list:
+        print(len(Gf))
         nodes,edges = ex.convert_nodes(file,len(Gf)+1)
         syn = Synonym() 
         nodes = syn.add_synonyms(nodes)
         G = gra.create_graph(nodes,edges)
         # nx.write_graphml(G, "t.graphml")
         
-        Gf = algo.join_graphs(G,Gf)
+        Gf,bridge_nodes = algo.join_graphs(G,Gf,bridge_nodes)
     
     nx.write_graphml(Gf, "tf.graphml")
