@@ -93,14 +93,14 @@ class Algo:
     def __init__(self):
         self.graph = None
 
-    def join_graphs(self, graph1, graph2,bridge_nodes):
+    def join_graphs(self, graph1, graph2, bridge_nodes, node_count):
 
         '''  
             Converting two graph object to single object
             So that Adding vertex and edges can be done easily
         ''' 
         G = nx.compose(graph1, graph2)
-        l = len(G.nodes) + 1
+        l = node_count + 1
         # List of all nodes in a graph
         g1 = [node for node in graph1.nodes(data=True)]
         g2 = [node for node in graph2.nodes(data=True)]
@@ -127,14 +127,15 @@ class Algo:
                     continue
                 ib = ib[0]
                 if s[1]['labelV'].lower() == e[1]['labelV'].lower():
-                    for i in e[1]:
-                        if i not in s[1]:
-                            s[1][i] = e[1][i]
-                    edg = list(G.edges(e[0]))
+
+                    for i in s[1]:
+                        if i not in e[1]:
+                            G.nodes[e[0]][i] = s[1][i]
+                    
+                    edg = list(G.edges(s[0]))
                     for i in range(len(edg)):
-                        #print([s[0],edg[i][1],{'labelE': 'has'}])
-                        G.add_edges_from([(s[0], edg[i][1], {'labelE': 'has'})])
-                    G.remove_node(e[0])
+                        G.add_edges_from([(e[0], edg[i][1], {'labelE': 'has'})])
+                    G.remove_node(s[0])
                     continue
 
                 # Condition if similarity is more than 50% 
@@ -150,9 +151,9 @@ class Algo:
                         if lemma[0].name() in bridge_nodes:
                             G.add_edge(e[0], bridge_nodes[lemma[0].name()])
                         else:
-                            G.add_nodes_from([(str(l), {"labelB":lemma[0].name().lower()}),])
-                            G.add_edges_from([(s[0], str(l),{'labelE': 'has'})])
-                            G.add_edges_from([(e[0], str(l),{'labelE': 'has'})])
+                            G.add_nodes_from([(l, {"labelB":lemma[0].name().lower()}),])
+                            G.add_edges_from([(s[0], l,{'labelE': 'has'})])
+                            G.add_edges_from([(e[0], l,{'labelE': 'has'})])
                             bridge_nodes[lemma[0].name()] = l
                             l+=1
                 except:
@@ -249,6 +250,9 @@ if __name__=="__main__":
     algo = Algo()
     syn = Synonym()
 
+    '''
+        Loading excel file 
+    '''
     dirListing = os.listdir('Models')
     file_list = []
     bridge_nodes = {}
@@ -256,20 +260,24 @@ if __name__=="__main__":
         if ".xlsx" in item:
             file_list.append('Models/'+item)
         
-    nodes,edges = ex.convert_nodes('test.xlsx',1)
+    nodes,edges = ex.convert_nodes(file_list[0],1)
     nodes = syn.add_synonyms(nodes)
     Gf = gra.create_graph(nodes,edges)
     # nx.write_graphml(Gf, "tf.graphml")
 
     
-    for file in file_list:
-        print(len(Gf))
-        nodes,edges = ex.convert_nodes(file,len(Gf)+1)
+    for file in file_list[1:]:
+        node_count = max(([int(i) for i in Gf.nodes()]))
+        print(node_count,file)
+        
+        nodes,edges = ex.convert_nodes(file,node_count+1)
         syn = Synonym() 
         nodes = syn.add_synonyms(nodes)
         G = gra.create_graph(nodes,edges)
         # nx.write_graphml(G, "t.graphml")
         
-        Gf,bridge_nodes = algo.join_graphs(G,Gf,bridge_nodes)
+        Gf,bridge_nodes = algo.join_graphs(G,Gf,bridge_nodes,node_count+len(nodes))
     
+    nx.draw(Gf,with_labels=True)
+    plt.show()
     nx.write_graphml(Gf, "tf.graphml")

@@ -1,6 +1,6 @@
 from gremlin_python import statics
 from gremlin_python.process.anonymous_traversal import traversal
-from gremlin_python.process.graph_traversal import __
+from gremlin_python.process.graph_traversal import __, label, properties, to
 from gremlin_python.process.strategies import *
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.structure.graph import Graph
@@ -10,14 +10,25 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import collections
 
+class Node:
+	def __init__(self,label,properties) -> None:
+		self.label = label
+		self.properties = properties
+
+class Edge:
+	def __init__(self,source,to) -> None:
+		self.source = source
+		self.to = to
 
 class Query:
+
 	# Given the string name find the numerical value of that node
 	# So that traversal is possible
-	def findNode(self,g,name):
+	def findNode(self, g, name) -> str:
 		nodes = set(g.V().has('$'+name).toList())
+		
 		if len(nodes)==0:
-			return "No such node"
+			return None
 		
 		final_node = '0'
 		for node in nodes:
@@ -30,15 +41,20 @@ class Query:
 		return final_node
 
 	# Extract vertex from the graph 
-	def extractVertex(self,g,graph):
+	def extractVertex(self, g, graph)->list:
 		tem_vertex = graph['@value']['vertices']
-		l = []
+		nodes = []
 		for v in tem_vertex:
+			node_property = {}
 			for p in g.V(v).properties():
-				if p.label=='labelV':
-					l.append(p.value)
-					break
-		return tuple(l)
+				if p.label == 'labelV':
+					name = p.value
+				elif p.label == 'labelB':
+					name = p.value
+				elif p.label[0] != '$':
+					node_property[p.label] = p.value
+			nodes.append(tuple([name,node_property]))
+		return nodes
 
 	# Extract edges from the graph
 	def extractEdges(self,g,graph):
@@ -59,22 +75,35 @@ class Query:
 		return tuple(edges)
 
 	# Find tree of required depth 
-	def findTrees(self,g,name,depth):
-		node = self.findNode(g,name)
-		if node == "No such node":
+	def findTrees(self, g, name, depth) -> Graph:
+		node = self.findNode(g, name)
+		if node == None:
 			return
-		subGraph = g.V(node).repeat(__.bothE().subgraph('subGraph').V()).times(depth).cap('subGraph').next()
-		vertex = self.extractVertex(g,subGraph)
+		
+		# Find the subgraph of the given depth (direct function from tinkerPop)
+		subGraph = g.V(node).repeat(__.bothE().subgraph('subGraph').bothV()).times(depth).cap('subGraph').next()
+		
+		nodes = self.extractVertex(g,subGraph)
 		edges = self.extractEdges(g,subGraph)
-		return (vertex,edges)
+
+		# Converting the nodes and edges to the objects of Node and Edge
+		node_objects = []
+		edge_objects = []
+		
+		for node in nodes:
+			node_objects.append(Node(node[0],node[1]))
+		for edge in edges:
+			edge_objects.append(Edge(edge[0],edge[1]))
+
+		return tuple(node_objects),tuple(edge_objects)
 		
 	# Find Descendant of the node upto particular depth
-	def findDescendants(self,g,name,depth):
+	def findDescendants(self, g, name, depth):
 		node = self.findNode(g,name)
 		if node == "No such node":
 			return
 
-		subGraph = g.V(node).repeat(__.bothE().subgraph('subGraph').V()).times(depth).cap('subGraph').next()
+		subGraph = g.V(node).repeat(__.bothE().subgraph('subGraph').bothV()).times(depth).cap('subGraph').next()
 
 		tem_vertex = subGraph['@value']['vertices']
 
@@ -87,74 +116,27 @@ class Query:
 					break
 		return tuple(nodes)
 
-	def bfs(graph,root,g):
-		visited, queue = set(), collections.deque([(root,root)])
-		removed = set()
-		visited.add(root)
-
-		while queue:
-
-			# Dequeue a vertex from queue
-			vertex = queue.popleft()
-			if vertex[0] in removed or vertex[1] in removed:
-				continue
-			flag = 0
-			for p in g.V(vertex[0]).properties():
-				if p.label=='labelV':
-					flag=1
-					break
-			if flag:
-				print(maping[vertex[0]],end=' ')
-				visited.add(vertex[0])
-				for neighbour in graph[vertex[0]]:
-					if neighbour not in visited:
-						queue.append((neighbour,vertex[0]))
-			else:
-				print("...",maping[vertex[0]],maping[vertex[1]])
-				visited.add(vertex[0])
-				removed.add(vertex[0])
-				for neighbour in graph[vertex[0]]:
-					if neighbour not in visited:
-						print(maping[neighbour],neighbour)
-						response = input()
-						if response == 'y' or response=='Y':
-							graph[vertex[1]].append(neighbour)
-							graph[neighbour].remove(vertex[0])
-							graph[neighbour].append(vertex[1])
-
-							queue.append((neighbour,vertex[1]))
-						else:
-							graph[neighbour].remove(vertex[0])
-						graph.pop(vertex[0])
-		return graph
+# Visualize the grph using networkx 
+def draw(Gs):
+	plt.figure(figsize=(4, 3))
+	nx.draw(Gs,node_color='lightblue',with_labels=True,node_size=1000)
+	plt.show()
 
 
 if __name__=="__main__":
-
-	''' 
-		Import graphml file
-	'''
-	# gra = Import()
-	# G3 = gra.import_graphml('g3.graphml')
-	# G2 = gra.import_graphml('g2.graphml')
-	
-	# algo = Algo()
-	# G = algo.join_graphs(G2,G3)
-	# nx.write_graphml(G, "gf.graphml")
-
-	#G = gra.import_graphml('gf.graphml')
 
 
 	''' Graph traversal '''
 	g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin','g'))
 	
 	
-	
-	name = input("Enter the word: ")
+	name = input("Enter the word: ").lower()
 	q = Query()
-	subGraph = q.findTrees(g, name, 1)
+	height = int(input("Enter the height"))
+	subGraph = q.findTrees(g, name, height)
 	print(subGraph)
-	print("Descendants")
-	print(q.findDescendants(g, name, 1))
+	# draw(subGraph)
+	# print("Descendants")
+	# print(q.findDescendants(g, name, 1))
 	
 
